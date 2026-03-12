@@ -24,6 +24,15 @@ SELECT
 FROM financials.remit_employer_transactions t1
 GROUP BY employer
 ORDER BY employer
-) select * from employer_stats e
+) select 
+e.*,
+a.*,
+ed.remittance_cash_transfer_method,
+er.remittance_schedule,
+ed.remittance_payment_terms,
+ed.remittance_contract_exists
+ from employer_stats e
 left join v_remit_employer_transactions_aging a
 on e.employer = a.employer
+left join bme.employer er on e.employer = er.name
+left join financials.employer_details ed on er.employer_id = ed.employer_id
