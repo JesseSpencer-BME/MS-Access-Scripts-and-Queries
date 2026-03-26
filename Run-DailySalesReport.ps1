@@ -1,3 +1,6 @@
+#AI Troubleshooting reference: https://claude.ai/chat/cdfd55d1-c5f2-417c-82a8-461147056679
+
+
 # ============================================================
 # Run-DailySalesReport.ps1
 # Automates: Access macro -> Excel refresh/save -> Email report
@@ -10,7 +13,8 @@ $AccessMacro    = "_mcrSALESONLY"
 $ExcelTemplate  = "C:\Users\JesseSpencer\BenefitsMe, LLC\BenefitsMe - Business Intelligence\KPIs\Sales Reporting\Daily Sales Pivot Reporting\Sales Pivot (Template).xlsx"
 $ExcelOutputDir = Split-Path $ExcelTemplate -Parent
 
-$EmailTo        = "jessespencer@benefitsme.com"
+$EmailTo        = "RaechelPeters@BenefitsMe.com; steve.spencer@rfoholdings.com; AndyEdinborough@BenefitsMe.com; dougrippel@rfoholdings.com; AbbyAdams@BenefitsMe.com"
+$EmailToCC      = "kama.crockett@rfoholdings.com; jessspencer@benefitsme.com"
 
 # --- Derived values ----------------------------------------------------------
 $DateStamp      = Get-Date -Format "yyyy-MM-dd"
@@ -161,6 +165,7 @@ try {
 
     $mail = $outlook.CreateItem(0)   # 0 = olMailItem
     $mail.To      = $EmailTo
+    $mail.CC      = $EmailToCC
     $mail.Subject = $OutputFileName
     $mail.Body    = "Please find today's sales pivot report attached.`n`nFile: $OutputFileName`nGenerated: $(Get-Date -Format 'dddd, MMMM d, yyyy')"
     $mail.Attachments.Add($OutputFilePath) | Out-Null
