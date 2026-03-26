@@ -8,16 +8,9 @@ $AccessDbPath   = "C:\DBs\BenefitsMeDB.accdb"
 $AccessMacro    = "_mcrSALESONLY"
 
 $ExcelTemplate  = "C:\Users\JesseSpencer\BenefitsMe, LLC\BenefitsMe - Business Intelligence\KPIs\Sales Reporting\Daily Sales Pivot Reporting\Sales Pivot (Template).xlsx"
-
 $ExcelOutputDir = Split-Path $ExcelTemplate -Parent
 
 $EmailTo        = "jessespencer@benefitsme.com"
-$SmtpServer     = "smtp.office365.com"
-$SmtpPort       = 587
-$SmtpFrom       = "jessespencer@benefitsme.com"
-
-# smtp.cred lives in the same folder as this script
-$CredFile       = Join-Path $ExcelOutputDir "smtp.cred"
 
 # --- Derived values ----------------------------------------------------------
 $DateStamp      = Get-Date -Format "yyyy-MM-dd"
@@ -148,38 +141,42 @@ finally {
 }
 
 # =============================================================================
-# STEP 3 - Send email with the saved file attached
+# STEP 3 - Send email via Outlook COM object
 # =============================================================================
-Write-Log "Sending email to $EmailTo with attachment: $OutputFileName"
+Write-Log "Sending email to $EmailTo via Outlook..."
 
+$outlook = $null
+$mail    = $null
 try {
-    if (Test-Path $CredFile) {
-        $smtpCred = Import-Clixml -Path $CredFile
-        Write-Log "Loaded SMTP credential from: $CredFile"
+    # Attach to already-running Outlook, or launch it
+    try {
+        $outlook = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Outlook.Application")
+        Write-Log "Attached to existing Outlook instance."
     }
-    else {
-        Write-Log "No stored credential found at $CredFile - prompting interactively." "WARN"
-        $smtpCred = Get-Credential -Message "Enter SMTP credentials for $SmtpFrom"
+    catch {
+        Write-Log "Outlook not running - launching it now..."
+        $outlook = New-Object -ComObject Outlook.Application
+        Start-Sleep -Seconds 3
     }
 
-    $mailBody = "Please find today's sales pivot report attached.`n`nFile: $OutputFileName`nGenerated: $(Get-Date -Format 'dddd, MMMM d, yyyy')"
-
-    Send-MailMessage `
-        -From        $SmtpFrom `
-        -To          $EmailTo `
-        -Subject     $OutputFileName `
-        -Body        $mailBody `
-        -Attachments $OutputFilePath `
-        -SmtpServer  $SmtpServer `
-        -Port        $SmtpPort `
-        -UseSsl `
-        -Credential  $smtpCred
+    $mail = $outlook.CreateItem(0)   # 0 = olMailItem
+    $mail.To      = $EmailTo
+    $mail.Subject = $OutputFileName
+    $mail.Body    = "Please find today's sales pivot report attached.`n`nFile: $OutputFileName`nGenerated: $(Get-Date -Format 'dddd, MMMM d, yyyy')"
+    $mail.Attachments.Add($OutputFilePath) | Out-Null
+    $mail.Send()
 
     Write-Log "Email sent successfully."
 }
 catch {
     Write-Log "ERROR sending email: $_" "ERROR"
     throw
+}
+finally {
+    if ($null -ne $mail)    { [System.Runtime.InteropServices.Marshal]::ReleaseComObject($mail)    | Out-Null }
+    if ($null -ne $outlook) { [System.Runtime.InteropServices.Marshal]::ReleaseComObject($outlook) | Out-Null }
+    [GC]::Collect()
+    [GC]::WaitForPendingFinalizers()
 }
 
 Write-Log "========== Daily Sales Report completed successfully =========="
