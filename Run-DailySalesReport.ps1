@@ -14,7 +14,7 @@ $ExcelTemplate  = "C:\Users\JesseSpencer\BenefitsMe, LLC\BenefitsMe - Business I
 $ExcelOutputDir = Split-Path $ExcelTemplate -Parent
 
 $EmailTo        = "RaechelPeters@BenefitsMe.com; steve.spencer@rfoholdings.com; AndyEdinborough@BenefitsMe.com; dougrippel@rfoholdings.com; AbbyAdams@BenefitsMe.com"
-$EmailToCC      = "kama.crockett@rfoholdings.com; jessepencer@benefitsme.com"
+$EmailToCC      = "kama.crockett@rfoholdings.com; jessespencer@benefitsme.com"
 
 # --- Derived values ----------------------------------------------------------
 $DateStamp      = Get-Date -Format "yyyy-MM-dd"
